@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Socket.IO chat</title>
+
+    <style>
+        :root {
+            --base-color: #829CBC;
+            --object-color: #6290C8;
+            --highlight-color: #376996;
+            --call-action-color: #1F487E;
+            --text-color: #1D3461;
+        }
+
+        body {
+            background-color: var(--base-color);
+            margin: 0;
+            padding-bottom: 3rem;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .message-of-the-day-text {
+            padding: 0;
+            margin: 0;
+            margin-bottom: 2px;
+            font-size: 16px;
+        }
+
+        .input {
+            border: none;
+            border-radius: 5px;
+            width: 100%;
+            font-size: 24px;
+        }
+
+        .input:focus {
+            outline: none;
+        }
+
+        .form {
+            background: transparent;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            width: 100%;
+            padding-top: 32px;
+            margin-left: 20px;
+            margin-right: 20px;
+        }
+
+        .form>button {
+            background: var(--call-action-color);
+            border: none;
+            padding: 10px;
+            margin: 0.25rem;
+            border-radius: 3px;
+            outline: none;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .message-of-the-day {
+            background: var(--object-color);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            box-sizing:
+                border-box;
+
+
+            .message-of-the-day-fold {
+                transition: all 1s;
+                max-height: 0vh;
+                overflow: hidden;
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .message-of-the-day-fold.active {
+                max-height: 25vh !important;
+            }
+
+            .message-of-the-day-fold-button {
+                background: var(--highlight-color);
+                height: 20px;
+                width: 100%;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-evenly;
+                align-items: center;
+
+                .message-of-the-day-fold-button-div {
+                    pointer-events: none;
+                    background-color: var(--call-action-color);
+                    width: 5%;
+                    height: 15%;
+                    min-width: 50px;
+                    border-radius: 5px;
+                }
+            }
+        }
+
+        .page--title {
+            background-color: var(--object-color);
+            margin-top: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+
+            .page--title--text {
+                color: var(--text-color);
+                font-size: 32px;
+            }
+        }
+
+        .message--container {
+                padding: 10px;
+                border-radius: 10px;
+                background-color: var(--highlight-color);
+                display: flex;
+                flex-direction: column;
+
+                margin: 10px;
+                color: var(--text-color);
+
+
+
+                .message-object-container {
+                    padding: 10px;
+                    border-radius: 10px;
+                    background-color: var(--object-color);
+                    margin: 5px;
+
+                    .message-object-title {
+                        font-size: 24px;
+                        margin: 0;
+                        padding: 0;
+                    }
+
+                    .message-object-description {
+                        font-size: 20px;
+                        margin: 0;
+                        padding: 0;
+                    }
+                }
+
+                .message-time-updated-container {
+                    padding: 10px;
+                    border-radius: 10px;
+                    background-color: var(--object-color);
+                    margin: 5px;
+
+                    .message-time-updated {
+                        font-size: 18px;
+                        margin: 0;
+                        padding: 0;
+                    }
+                }
+            }
+
+
+        .workflows {
+            display: flex;
+            justify-content: center;
+            flex-direction: row;
+            flex-wrap: wrap;
+            max-width: 100vw;
+            min-height: 100px;
+            margin-top: 100px;
+            margin-left: 10px;
+            margin-right: 10px;
+
+            .workflow--container {
+                padding: 10px;
+                border-radius: 10px;
+                background-color: var(--object-color);
+                display: flex;
+                flex-direction: column;
+                min-width: 250px;
+                max-width: 33%;
+                margin: 10px;
+                color: var(--text-color);
+
+                .person-title-container {
+                    padding: 10px;
+                    border-radius: 10px;
+                    background-color: var(--highlight-color);
+                    margin: 5px;
+
+                    .person-title {
+                        font-size: 28px;
+                        margin: 0;
+                        padding: 0;
+                    }
+                }
+
+                .work-object-container {
+                    padding: 10px;
+                    border-radius: 10px;
+                    background-color: var(--highlight-color);
+                    margin: 5px;
+
+                    .work-object-title {
+                        font-size: 24px;
+                        margin: 0;
+                        padding: 0;
+                    }
+
+                    .work-object-description {
+                        font-size: 20px;
+                        margin: 0;
+                        padding: 0;
+                    }
+                }
+
+                .time-updated-container {
+                    padding: 10px;
+                    border-radius: 10px;
+                    background-color: var(--highlight-color);
+                    margin: 5px;
+
+                    .time-updated {
+                        font-size: 18px;
+                        margin: 0;
+                        padding: 0;
+                    }
+                }
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="page--title">
+        <h1 class="page--title--text">PURPLE MEDIA DEVS</h1>
+    </div>
+
+    <div class="workflows">
+        <div class="workflow--container">
+            <div class="person-title-container">
+                <p class="person-title">Jules</p>
+            </div>
+            <div class="work-object-container">
+                <p class="work-object-title">Currently:</p>
+
+                <p class="work-object-description" id="jules-message-box">...</p>
+            </div>
+            <div class="time-updated-container">
+                <p class="time-updated" id="jules-message-box-time">...</p>
+            </div>
+        </div>
+
+        <div class="workflow--container">
+            <div class="person-title-container">
+                <p class="person-title">Geoff</p>
+            </div>
+            <div class="work-object-container">
+                <p class="work-object-title">Currently:</p>
+
+                <p class="work-object-description" id="geoff-message-box">...</p>
+            </div>
+            <div class="time-updated-container">
+                <p class="time-updated" id="geoff-message-box-time">...</p>
+            </div>
+        </div>
+
+        <div class="workflow--container">
+            <div class="person-title-container">
+                <p class="person-title">Liam</p>
+            </div>
+            <div class="work-object-container">
+                <p class="work-object-title">Currently:</p>
+
+                <p class="work-object-description" id="liam-message-box">...</p>
+            </div>
+            <div class="time-updated-container">
+                <p class="time-updated" id="liam-message-box-time">...</p>
+            </div>
+        </div>
+
+        <div class="workflow--container">
+            <div class="person-title-container">
+                <p class="person-title">Chloe</p>
+            </div>
+            <div class="work-object-container">
+                <p class="work-object-title">Currently:</p>
+
+                <p class="work-object-description" id="chloe-message-box">...</p>
+            </div>
+            <div class="time-updated-container">
+                <p class="time-updated" id="chloe-message-box-time">...</p>
+            </div>
+        </div>
+
+        <div class="workflow--container">
+            <div class="person-title-container">
+                <p class="person-title">Suraj</p>
+            </div>
+            <div class="work-object-container">
+                <p class="work-object-title">Currently:</p>
+
+                <p class="work-object-description" id="suraj-message-box">...</p>
+            </div>
+            <div class="time-updated-container">
+                <p class="time-updated" id="suraj-message-box-time">...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="message--container">
+        <div class="message-object-container">
+            <p class="message-object-title">Current Message of the Day:</p>
+
+            <p class="message-object-description" id="suraj-message-box">...</p>
+        </div>
+        <div class="message-time-updated-container">
+            <p class="message-time-updated" id="suraj-message-box-time">...</p>
+        </div>
+    </div>
+
+    <div class="message-of-the-day">
+        <div class="message-of-the-day-fold-button" onclick="document.getElementsByClassName('message-of-the-day-fold')[0].classList.toggle('active');">
+            <div class="message-of-the-day-fold-button-div"></div>
+            <div class="message-of-the-day-fold-button-div"></div>
+            <div class="message-of-the-day-fold-button-div"></div>
+
+        </div>
+        <div class="message-of-the-day-fold">
+
+            <form class="form" id="work-form" action="">
+                <p class="message-of-the-day-text">What are you working on?</p><input class="input" id="work-input" autocomplete="off" /><button>Send</button>
+            </form>
+            <form class="form" id="message-form" action="">
+                <p class="message-of-the-day-text">Have something to say?</p><input class="input" id="message-input" autocomplete="off" /><button>Send</button>
+            </form>
+        </div>
+    </div>
+
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        socket.emit('loadall');
+
+        const work_form = document.getElementById('work-form');
+        const work_input = document.getElementById('work-input');
+
+        const message_form = document.getElementById('message-form');
+        const message_input = document.getElementById('message-input');
+
+        work_form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (work_input.value) {
+
+                var currentdate = new Date();
+                var datetime = "Updated: " + currentdate.getDate() + "/"
+                    + (currentdate.getMonth() + 1) + "/"
+                    + currentdate.getFullYear() + " @ "
+                    + currentdate.getHours() + ":"
+                    + currentdate.getMinutes() + ":"
+                    + currentdate.getSeconds();
+
+                socket.emit('liammessage', work_input.value);
+                work_input.value = '';
+                socket.emit('liammessagetime', datetime.toString());
+            }
+        });
+
+
+        message_form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (message_input.value) {
+
+                var currentdate = new Date();
+                var datetime = "Updated: " + currentdate.getDate() + "/"
+                    + (currentdate.getMonth() + 1) + "/"
+                    + currentdate.getFullYear() + " @ "
+                    + currentdate.getHours() + ":"
+                    + currentdate.getMinutes() + ":"
+                    + currentdate.getSeconds();
+
+                socket.emit('liammessage', message_input.value);
+                message_input.value = '';
+                socket.emit('liammessagetime', datetime.toString());
+            }
+        });
+
+
+
+
+        socket.on('liammessage', (msg) => {
+            const item = document.getElementById("liam-message-box");
+            item.innerText = msg;
+
+        });
+
+        socket.on('liammessagetime', (msg) => {
+            const item = document.getElementById("liam-message-box-time");
+            item.innerText = msg;
+        });
+
+        socket.on('julesmessage', (msg) => {
+            const item = document.getElementById("jules-message-box");
+            item.innerText = msg;
+
+        });
+
+        socket.on('julesmessagetime', (msg) => {
+            const item = document.getElementById("jules-message-box-time");
+            item.innerText = msg;
+        });
+
+        socket.on('geoffmessage', (msg) => {
+            const item = document.getElementById("geoff-message-box");
+            item.innerText = msg;
+
+        });
+
+        socket.on('geoffmessagetime', (msg) => {
+            const item = document.getElementById("geoff-message-box-time");
+            item.innerText = msg;
+        });
+
+        socket.on('chloemessage', (msg) => {
+            const item = document.getElementById("chloe-message-box");
+            item.innerText = msg;
+
+        });
+
+        socket.on('chloemessagetime', (msg) => {
+            const item = document.getElementById("chloe-message-box-time");
+            item.innerText = msg;
+        });
+
+        socket.on('surajmessage', (msg) => {
+            const item = document.getElementById("suraj-message-box");
+            item.innerText = msg;
+
+        });
+
+        socket.on('surajmessagetime', (msg) => {
+            const item = document.getElementById("suraj-message-box-time");
+            item.innerText = msg;
+        });
+    </script>
+</body>
+
+</html>
